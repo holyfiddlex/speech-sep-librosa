@@ -1,23 +1,53 @@
 """Audio and Spectrogram definitions"""
 
-import numpy as np
+import math
 import librosa
+import numpy as np
+
+
+from scipy.signal import resample_poly
 
 
 class Audio():
     """Audio object definition. Used as a superclass for AudioTensor and AudioArray"""
+
     def __init__(self, sig, sr, filename=None):
         """Initializes Audio object"""
         self.sig = sig
-        self.sr = sr
+        self.__sr = sr
         self.filename = filename
 
     @classmethod
     def from_file(cls, fn: str, data_type = None):
         """Creates Audio object from filename with the specified data type."""
-        sig, sr = librosa.load(fn)
-        audio = cls(data_type(sig), sr, fn)
-        return audio
+        try:
+            sig, sr = librosa.load(fn)
+            return cls(data_type(sig), sr, fn)
+        except TypeError:
+            raise NotImplementedError
+
+    @property
+    def duration(self):
+        """Returns the duration of the signal"""
+        return len(self.sig)
+
+    @property
+    def sr(self):
+        """Manages samplerate changes and resamples accordingly"""
+        return self.__sr
+
+    @sr.setter
+    def sr(self, sr):
+        self.__resample(sr)
+        self.__sr = sr
+
+    def __resample(self, sr: int):
+        """Resamples time series using specified sample rate"""
+        if self.sr == sr:
+            return
+        sr_gcd = math.gcd(self.sr, sr)
+        resampled = resample_poly(self.sig, int(sr/sr_gcd), int(self.sr/sr_gcd), axis=-1)
+        self.sig = resampled
 
     def show(self):
         """Plots time series of audio"""
@@ -29,10 +59,6 @@ class Audio():
 
     def to_spec(self):
         """Transforms Audio object to Spec object of the same data type"""
-        raise NotImplementedError
-
-    def resample(self, sr: int):
-        """Resamples time series using specified sample rate"""
         raise NotImplementedError
 
     def clip(self, time: float):
@@ -66,4 +92,6 @@ class AudioArray(Audio):
     """Audio object with numpy array"""
     @classmethod
     def from_file(cls, fn, data_type=np.array):
-        super().__class__(sig, sr, data_type)
+        return super().from_file(fn, data_type)
+    
+
