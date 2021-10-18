@@ -1,14 +1,23 @@
 """Audio and Spectrogram definitions"""
 
+import numpy as np
+import librosa
+
+
 class Audio():
     """Audio object definition. Used as a superclass for AudioTensor and AudioArray"""
-    def __init__(self):
+    def __init__(self, sig, sr, filename=None):
         """Initializes Audio object"""
+        self.sig = sig
+        self.sr = sr
+        self.filename = filename
 
     @classmethod
-    def from_file(cls, filename: str, data_type: str):
+    def from_file(cls, fn: str, data_type = None):
         """Creates Audio object from filename with the specified data type."""
-        raise NotImplementedError
+        sig, sr = librosa.load(fn)
+        audio = cls(data_type(sig), sr, fn)
+        return audio
 
     def show(self):
         """Plots time series of audio"""
@@ -22,7 +31,6 @@ class Audio():
         """Transforms Audio object to Spec object of the same data type"""
         raise NotImplementedError
 
-    # pylint: disable=invalid-name
     def resample(self, sr: int):
         """Resamples time series using specified sample rate"""
         raise NotImplementedError
@@ -53,3 +61,9 @@ class Spectrogram():
     def trim(self):
         """Trim 2d shape to fit U-Net model"""
         raise NotImplementedError
+
+class AudioArray(Audio):
+    """Audio object with numpy array"""
+    @classmethod
+    def from_file(cls, fn, data_type=np.array):
+        super().__class__(sig, sr, data_type)
