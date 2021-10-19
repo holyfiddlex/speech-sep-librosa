@@ -16,16 +16,17 @@ class TestAudioArray(unittest.TestCase):
         sig, sr = librosa.load(self.fn)
         audio_array = AudioArray(sig, sr, np.array)
         assert_audio_array(audio_array)
-    
+
     def test_from_file(self):
         """Test from_file object initialization"""
         audio_array = AudioArray.from_file(self.fn)
         assert_audio_array(audio_array)
-    
+
     def test_to_tensor(self):
         """Test transforming array to tensor"""
         audio_array = AudioArray.from_file(self.fn)
         audio_tensor = audio_array.to_tensor()
+        assert_audio_tensor(audio_tensor)
 
 
 class TestAudioTensor(unittest.TestCase):
@@ -36,7 +37,7 @@ class TestAudioTensor(unittest.TestCase):
         sig, sr = librosa.load(self.fn)
         audio_tensor = AudioTensor(sig, sr, Tensor)
         assert_audio_tensor(audio_tensor)
-    
+
     def test_from_file(self):
         """Test from_file object initialization"""
         audio_tensor = AudioTensor.from_file(self.fn)
@@ -49,6 +50,7 @@ class TestAudioTensor(unittest.TestCase):
         assert_audio_array(audio_array)
 
 def assert_audio_array(audio_array):
+    """Assert audio_array object"""
     assert isinstance(audio_array, AudioArray)
     assert isinstance(audio_array.sig, np.ndarray)
     assert isinstance(audio_array.sr, int)
@@ -57,6 +59,7 @@ def assert_audio_array(audio_array):
     assert audio_array.duration == 4.115056689342404
 
 def assert_audio_tensor(audio_tensor):
+    """Assert audio_tensor object"""
     assert isinstance(audio_tensor, AudioTensor)
     assert isinstance(audio_tensor.sig, Tensor)
     assert isinstance(audio_tensor.sr, int)

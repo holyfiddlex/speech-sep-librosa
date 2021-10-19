@@ -16,6 +16,7 @@ class AudioObject():
 
     data_type: callable = None
 
+    # pylint: disable=not-callable
     def __init__(self, sig, sr, fn=None):
         """Initializes Audio object"""
         self.sig = self.data_type(sig)
@@ -28,8 +29,8 @@ class AudioObject():
         try:
             sig, sr = librosa.load(fn)
             return cls(sig, sr, fn)
-        except TypeError:
-            raise NotImplementedError("Data type was not found because function was not implemented")
+        except TypeError as err:
+            raise NotImplementedError("Error, function was not implemented") from err
 
     @property
     def duration(self):
@@ -75,6 +76,7 @@ class AudioObject():
         """Transforms Audio object to Spec object of the same data type"""
         return SpecObject()
 
+
 class SpecObject():
     """Spectrogram object definition. Used as a superclass for SpecTensor and SpecArray"""
 
@@ -100,7 +102,7 @@ class SpecObject():
     def trim(self):
         """Trim 2d shape to fit U-Net model"""
         raise NotImplementedError
-    
+
 
 class AudioArray(AudioObject):
     """Audio object with numpy array"""
@@ -111,10 +113,12 @@ class AudioArray(AudioObject):
         """Returns Tensor version of object"""
         return AudioTensor(self.sig, self.sr, self.fn)
 
+
 class AudioTensor(AudioObject):
     """Audio object with numpy array"""
 
     data_type = Tensor
 
     def to_array(self):
+        """Returns np.array version of object"""
         return AudioArray(self.sig, self.sr, self.fn)
