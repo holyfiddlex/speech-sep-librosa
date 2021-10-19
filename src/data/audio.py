@@ -2,34 +2,39 @@
 
 import math
 import librosa
-import numpy as np
+import matplotlib.pyplot as plt
 
+import numpy as np
+from fastai.torch_basics import Tensor
 
 from scipy.signal import resample_poly
+from IPython.display import Audio, display
 
 
-class Audio():
+class AudioObject():
     """Audio object definition. Used as a superclass for AudioTensor and AudioArray"""
 
-    def __init__(self, sig, sr, filename=None):
+    data_type: callable = None
+
+    def __init__(self, sig, sr, fn=None):
         """Initializes Audio object"""
-        self.sig = sig
+        self.sig = self.data_type(sig)
         self.__sr = sr
-        self.filename = filename
+        self.fn = fn
 
     @classmethod
-    def from_file(cls, fn: str, data_type = None):
+    def from_file(cls, fn: str):
         """Creates Audio object from filename with the specified data type."""
         try:
             sig, sr = librosa.load(fn)
-            return cls(data_type(sig), sr, fn)
+            return cls(sig, sr, fn)
         except TypeError:
-            raise NotImplementedError
+            raise NotImplementedError("Data type was not found because function was not implemented")
 
     @property
     def duration(self):
-        """Returns the duration of the signal"""
-        return len(self.sig)
+        """Returns the duration of the signal in seconds"""
+        return len(self.sig)/self.sr
 
     @property
     def sr(self):
@@ -51,28 +56,36 @@ class Audio():
 
     def show(self):
         """Plots time series of audio"""
-        raise NotImplementedError
+        _, ax = plt.subplots()
+        ax.plot(self.sig)
+        return ax
 
     def listen(self):
         """In jupyter enables reproducer to listen to audio"""
-        raise NotImplementedError
-
-    def to_spec(self):
-        """Transforms Audio object to Spec object of the same data type"""
-        raise NotImplementedError
+        display(Audio(self.sig, rate=self.sr))
 
     def clip(self, time: float):
         """Clip audio to specified amount of time in seconds"""
-        raise NotImplementedError
+        if time >= self.duration:
+            pass
+        else:
+            self.sig = self.sig[:time*self.sr]
 
-class Spectrogram():
+    def to_spec(self):
+        """Transforms Audio object to Spec object of the same data type"""
+        return SpecObject()
+
+class SpecObject():
     """Spectrogram object definition. Used as a superclass for SpecTensor and SpecArray"""
+
+    data_type = None
+
     def __init__(self):
         """Initializes Spectrogram object"""
         raise NotImplementedError
 
     @classmethod
-    def from_file(cls, filename: str, data_type: str):
+    def from_file(cls, fn: str):
         """Creates Audio object from filename with the specified data type."""
         raise NotImplementedError
 
@@ -87,11 +100,21 @@ class Spectrogram():
     def trim(self):
         """Trim 2d shape to fit U-Net model"""
         raise NotImplementedError
-
-class AudioArray(Audio):
-    """Audio object with numpy array"""
-    @classmethod
-    def from_file(cls, fn, data_type=np.array):
-        return super().from_file(fn, data_type)
     
 
+class AudioArray(AudioObject):
+    """Audio object with numpy array"""
+
+    data_type = np.array
+
+    def to_tensor(self):
+        """Returns Tensor version of object"""
+        return AudioTensor(self.sig, self.sr, self.fn)
+
+class AudioTensor(AudioObject):
+    """Audio object with numpy array"""
+
+    data_type = Tensor
+
+    def to_array(self):
+        return AudioArray(self.sig, self.sr, self.fn)
