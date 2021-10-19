@@ -69,6 +69,7 @@ class AudioObject():
     def clip(self, time: float):
         """Clip audio to specified amount of time in seconds"""
         if time >= self.duration:
+            #TODO fill in this part of the code
             pass
         else:
             self.sig = self.sig[:time*self.sr]
@@ -140,9 +141,9 @@ class SpecObject():
         sig = librosa.istft(real+imag*1j)
         return self.audio_type(sig, self.sr, self.fn)
 
-    def trim(self):
-        """Trim 2d shape to fit U-Net model"""
-        raise NotImplementedError
+    # def trim(self):
+    #     """Trim 2d shape to fit U-Net model"""
+    #     raise NotImplementedError
 
 
 class SpecArray(SpecObject):
