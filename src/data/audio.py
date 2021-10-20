@@ -5,11 +5,12 @@ import librosa
 import matplotlib.pyplot as plt
 
 import numpy as np
-from fastai.torch_basics import Tensor
+from fastai.torch_basics import Tensor, torch
 
 from scipy.signal import resample_poly
 from IPython.display import Audio, display
 
+from src.utils.errors import SpecShapeTooBigError
 
 class AudioObject():
     """Audio object definition. Used as a superclass for AudioTensor and AudioArray"""
@@ -69,13 +70,21 @@ class AudioObject():
     def clip(self, time: float):
         """Clip audio to specified amount of time in seconds"""
         if time >= self.duration:
-            #TODO fill in this part of the code
-            pass
+            missing_frames = time*self.sr - len(self.sig)
+            self.add_silence(missing_frames)
         else:
             self.sig = self.sig[:time*self.sr]
 
+    def add_silence(self, frames: int):
+        """Add silence to the end of the signal"""
+        raise NotImplementedError
+
     def to_spec(self):
         """Transforms Audio object to Spec object of the same data type"""
+        raise NotImplementedError
+
+    def __len__(self):
+        return len(self.sig)
 
 
 class AudioArray(AudioObject):
@@ -93,6 +102,10 @@ class AudioArray(AudioObject):
         spec3d = np.stack([abs(spec), spec.real, spec.imag], axis=self.color_axis)
         return SpecArray(spec3d, self.sr, self.fn)
 
+    def add_silence(self, frames: int):
+        """Return silent AudioArray of designated frames"""
+        self.sig = np.concatenate([self.sig, np.zeros(frames)])
+
 
 class AudioTensor(AudioObject):
     """Audio object with numpy array"""
@@ -108,6 +121,10 @@ class AudioTensor(AudioObject):
         spec = librosa.stft(np.array(self.sig))
         spec3d = np.stack([abs(spec), spec.real, spec.imag], axis=self.color_axis)
         return SpecTensor(Tensor(spec3d), self.sr, self.fn)
+
+    def add_silence(self, frames: int):
+        """Return silent AudioTensor of designated frames"""
+        self.sig = torch.cat([self.sig, torch.zeros(frames)])
 
 
 class SpecObject():
@@ -146,9 +163,13 @@ class SpecObject():
         sig = librosa.istft(real+imag*1j)
         return self.audio_type(sig, self.sr, self.fn)
 
-    # def trim(self):
-    #     """Trim 2d shape to fit U-Net model"""
-    #     raise NotImplementedError
+    def trim(self, shape: tuple):
+        """Trim 2d shape to fit U-Net model"""
+        curr_shape = self.shape
+        for i, size in enumerate(shape):
+            if size > curr_shape[i]:
+                raise SpecShapeTooBigError("New shape must be smaller than current shape")
+        self.data = self.data[:shape[0], :shape[1], :]
 
 
 class SpecArray(SpecObject):
@@ -156,8 +177,16 @@ class SpecArray(SpecObject):
     data_type: callable = np.array
     audio_type: type = AudioArray
 
+    def to_tensor(self):
+        """Returns SpecArray data as SpecTensor"""
+        return SpecTensor(self.data, self.sr, self.fn)
+
 
 class SpecTensor(SpecObject):
     """Spectrogram for tensor objects"""
     data_type: callable = Tensor
     audio_type: type = AudioTensor
+
+    def to_array(self):
+        """Returns SpecTensor data as SpecArray"""
+        return SpecArray(self.data, self.sr, self.fn)
