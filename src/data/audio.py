@@ -73,13 +73,17 @@ class AudioObject():
             self.add_silence(missing_frames)
         else:
             self.sig = self.sig[:time*self.sr]
-    
+
     def add_silence(self, frames: int):
         """Add silence to the end of the signal"""
         raise NotImplementedError
 
     def to_spec(self):
         """Transforms Audio object to Spec object of the same data type"""
+        raise NotImplementedError
+
+    def __len__(self):
+        return len(self.sig)
 
 
 class AudioArray(AudioObject):
@@ -119,7 +123,7 @@ class AudioTensor(AudioObject):
 
     def add_silence(self, frames: int):
         """Return silent AudioTensor of designated frames"""
-        self.sig = torch.cat([self.sig, torch.zeros(frames)]) 
+        self.sig = torch.cat([self.sig, torch.zeros(frames)])
 
 
 class SpecObject():
