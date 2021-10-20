@@ -35,7 +35,7 @@ class Spectify(Transform):
         """Encodes audio to spectrogram"""
         return audio.to_spec()
 
-    def decodes(self, audio: SpecObject):
+    def decodes(self, spec: SpecObject):
         """Decodes spectrogram to audio"""
         return spec.to_array()
 
@@ -70,4 +70,10 @@ class AudioMixer(ItemTransform):
         return type(audios[0])(mixed_signal, audios[0].sr, "mixed audios: "+mixed_name)
 
 
-PoiPipeline = Pipeline([AudioArray.from_file, AudioProcessor(), AudioMixer(), Spectify()])
+PoiPipeline = Pipeline([
+    AudioArray.from_file,
+    AudioProcessor(),
+    AudioMixer(),
+    Spectify(),
+    Tensorify(),
+])
