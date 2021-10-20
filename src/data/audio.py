@@ -156,8 +156,16 @@ class SpecArray(SpecObject):
     data_type: callable = np.array
     audio_type: type = AudioArray
 
+    def to_tensor(self):
+        """Returns SpecArray data as SpecTensor"""
+        return SpecTensor(self.data, self.sr, self.fn)
+
 
 class SpecTensor(SpecObject):
     """Spectrogram for tensor objects"""
     data_type: callable = Tensor
     audio_type: type = AudioTensor
+
+    def to_array(self):
+        """Returns SpecTensor data as SpecArray"""
+        return SpecArray(self.data, self.sr, self.fn)
