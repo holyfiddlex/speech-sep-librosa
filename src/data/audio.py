@@ -129,6 +129,11 @@ class SpecObject():
         audio = cls.audio_type.from_file(fn)
         return audio.to_spec()
 
+    @property
+    def shape(self):
+        """Return shape of spec data"""
+        return self.data.shape
+
     def show(self):
         """Plots spectrogram image"""
         _, ax = plt.subplots()
