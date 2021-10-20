@@ -32,4 +32,4 @@ class AudioProcessor(Transform):
         return audio
 
 
-PoiPipeline = Pipeline([AudioArray.from_file, AudioProcessor])
+PoiPipeline = Pipeline([AudioArray.from_file, AudioProcessor()])

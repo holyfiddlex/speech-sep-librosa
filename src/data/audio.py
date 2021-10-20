@@ -5,7 +5,7 @@ import librosa
 import matplotlib.pyplot as plt
 
 import numpy as np
-from fastai.torch_basics import Tensor
+from fastai.torch_basics import Tensor, torch
 
 from scipy.signal import resample_poly
 from IPython.display import Audio, display
@@ -69,10 +69,14 @@ class AudioObject():
     def clip(self, time: float):
         """Clip audio to specified amount of time in seconds"""
         if time >= self.duration:
-            #TODO fill in this part of the code
-            pass
+            missing_frames = time*self.sr - len(self.sig)
+            self.add_silence(missing_frames)
         else:
             self.sig = self.sig[:time*self.sr]
+    
+    def add_silence(self, frames: int):
+        """Add silence to the end of the signal"""
+        raise NotImplementedError
 
     def to_spec(self):
         """Transforms Audio object to Spec object of the same data type"""
@@ -93,6 +97,10 @@ class AudioArray(AudioObject):
         spec3d = np.stack([abs(spec), spec.real, spec.imag], axis=self.color_axis)
         return SpecArray(spec3d, self.sr, self.fn)
 
+    def add_silence(self, frames: int):
+        """Return silent AudioArray of designated frames"""
+        self.sig = np.concatenate([self.sig, np.zeros(frames)])
+
 
 class AudioTensor(AudioObject):
     """Audio object with numpy array"""
@@ -108,6 +116,10 @@ class AudioTensor(AudioObject):
         spec = librosa.stft(np.array(self.sig))
         spec3d = np.stack([abs(spec), spec.real, spec.imag], axis=self.color_axis)
         return SpecTensor(Tensor(spec3d), self.sr, self.fn)
+
+    def add_silence(self, frames: int):
+        """Return silent AudioTensor of designated frames"""
+        self.sig = torch.cat([self.sig, torch.zeros(frames)]) 
 
 
 class SpecObject():
