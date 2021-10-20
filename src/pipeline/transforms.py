@@ -69,11 +69,23 @@ class AudioMixer(ItemTransform):
         mixed_name = " with ".join([audio.fn for audio in audios])
         return type(audios[0])(mixed_signal, audios[0].sr, "mixed audios: "+mixed_name)
 
+class SpecTimmer(Transform):
+    """Trim spectrogram to fit into model"""
+    def __init__(self, shape: tuple):
+        self.shape = shape
+
+    def encodes(self, spec: SpecObject):
+        """Trims spectrogram into specified shape"""
+        spec.trim(self.shape)
+        return spec
+
+
 
 PoiPipeline = Pipeline([
     AudioArray.from_file,
     AudioProcessor(),
     AudioMixer(),
     Spectify(),
+    SpecTimmer((1024, 176)),
     Tensorify(),
 ])

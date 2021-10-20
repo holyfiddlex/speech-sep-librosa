@@ -8,3 +8,6 @@ class AudioTypeMismatchError(Exception):
 
 class AudioSampleRateMismatchError(Exception):
     """Error when audio sample rate is not what was expected"""
+
+class SpecShapeTooBigError(Exception):
+    """Error when trimming spec shape is too big"""

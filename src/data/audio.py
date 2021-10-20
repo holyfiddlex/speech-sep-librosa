@@ -10,6 +10,7 @@ from fastai.torch_basics import Tensor, torch
 from scipy.signal import resample_poly
 from IPython.display import Audio, display
 
+from src.utils.errors import SpecShapeTooBigError
 
 class AudioObject():
     """Audio object definition. Used as a superclass for AudioTensor and AudioArray"""
@@ -162,9 +163,13 @@ class SpecObject():
         sig = librosa.istft(real+imag*1j)
         return self.audio_type(sig, self.sr, self.fn)
 
-    # def trim(self):
-    #     """Trim 2d shape to fit U-Net model"""
-    #     raise NotImplementedError
+    def trim(self, shape: tuple):
+        """Trim 2d shape to fit U-Net model"""
+        curr_shape = self.shape
+        for i, size in enumerate(shape):
+            if size > curr_shape[i]:
+                raise SpecShapeTooBigError("New shape must be smaller than current shape")
+        self.data = self.data[:shape[0], :shape[1], :]
 
 
 class SpecArray(SpecObject):
