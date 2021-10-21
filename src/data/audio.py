@@ -3,8 +3,10 @@
 import math
 import librosa
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 import numpy as np
+from fastai.data.transforms import ToTensor
 from fastai.torch_basics import Tensor, torch
 
 from scipy.signal import resample_poly
@@ -26,7 +28,7 @@ class AudioObject():
         self.fn = fn
 
     @classmethod
-    def from_file(cls, fn: str):
+    def from_file(cls, fn: (str, Path)):
         """Creates Audio object from filename with the specified data type."""
         try:
             sig, sr = librosa.load(fn)
@@ -190,3 +192,8 @@ class SpecTensor(SpecObject):
     def to_array(self):
         """Returns SpecTensor data as SpecArray"""
         return SpecArray(self.data, self.sr, self.fn)
+
+@ToTensor
+def encodes(self, o:AudioTensor): return o.data
+@ToTensor
+def encodes(self, o:SpecTensor): return o.data

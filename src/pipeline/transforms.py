@@ -1,6 +1,11 @@
 """Transforms for audio pipeline"""
 
-from fastai.data.transforms import ItemTransform, Transform, Pipeline
+from fastai.data.transforms import (
+    ItemTransform,
+    Transform,
+    Pipeline,
+    ToTensor,
+)
 
 from src.data.audio import (
     AudioObject,
@@ -66,7 +71,7 @@ class AudioMixer(ItemTransform):
             raise AudioTypeMismatchError("Recieved audios of different type")
 
         mixed_signal = sum([audio.sig for audio in audios])
-        mixed_name = " with ".join([audio.fn for audio in audios])
+        mixed_name = " with ".join([str(audio.fn) for audio in audios])
         return type(audios[0])(mixed_signal, audios[0].sr, "mixed audios: "+mixed_name)
 
 class SpecTimmer(Transform):
@@ -79,7 +84,10 @@ class SpecTimmer(Transform):
         spec.trim(self.shape)
         return spec
 
-
+class DebugPrinter(Transform):
+    def encodes(self, o):
+        print(o)
+        return o
 
 PoiPipeline = Pipeline([
     AudioArray.from_file,
@@ -88,4 +96,5 @@ PoiPipeline = Pipeline([
     Spectify(),
     SpecTimmer((1024, 176)),
     Tensorify(),
+    ToTensor(),
 ])
