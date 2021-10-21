@@ -35,7 +35,6 @@ pydantic==1.8.2
 pylint==2.6.0
 pyparsing==2.4.7
 PyQt5==5.12.3
-PyQt5_sip==4.19.18
 PyQtChart==5.12
 PyQtWebEngine==5.12.1
 pytz==2021.3

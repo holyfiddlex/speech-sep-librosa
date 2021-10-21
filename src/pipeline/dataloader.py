@@ -1,20 +1,18 @@
 """Data loader definition"""
 
-#from glob import glob
 import mimetypes
 import random
-from fastai.data.transforms import get_files
 
-# audio_ds = glob("../../data/*.wav")
+from fastai.data.transforms import get_files, DataLoaders
+from torch.utils.data import Dataset
+
+from src.pipeline.transforms import PoiPipeline
+
 audio_extensions = set(k for k,v in mimetypes.types_map.items() if v.startswith('audio/'))
 
 def get_audio_files(path, recurse=True, folders=None):
     "Get image files in `path` recursively, only in `folders`, if specified."
     return get_files(path, extensions=audio_extensions, recurse=recurse, folders=folders)
-
-def AudioPipe(path, sr=22050, duration=5):
-    """Audio processing pipeline"""
-    return Pipeline([AudioMono.create, Resample(sr), Clip(duration), Mixer, Spectify(), Unet_Trimmer(8), Normalize(), Decibelify(), Group()])
 
 
 class PoiMesher():
@@ -39,19 +37,25 @@ class PoiMesher():
         non_poi_files = self.get_non_poi_files(path)
         for _ in range(len(non_poi_files)):
             rand_poi.append(random.choice(poi_files))
-        return list(map(list,zip(rand_poi, non_poi_files)))
+        return list(map(tuple,zip(rand_poi, non_poi_files)))
 
 class PoiDataset(Dataset):
     """Person of Interest Dataset object"""
     def __init__(self, path: str, poi: int, pipe):
-        mesher = PoiMesher(int)
+        mesher = PoiMesher(poi)
         self.data_pairs = mesher(path)
+        self.len = len(self.data_pairs)
         self.pipe = pipe
 
-    def __getitem__(self, i: int):
-        x,y = self.pipe(index)
-        x,y = Tensorify()(x),Tensorify()(y)
-        return x,y
+    def __len__(self):
+        return self.len
 
-train_ds = SpecMaskDataset(files)
-dls = DataLoaders.from_dsets(train_ds, train_ds, bs=2).cuda()
+    def __getitem__(self, i: int):
+        files = self.data_pairs[i]
+        return self.pipe(files)
+
+def create_poi_dataloader(path: str, poi: int, bs=2):
+    """Returns dataloader for path and person of interest"""
+    train_ds = PoiDataset(path, poi, PoiPipeline)
+    poi_data_loader = DataLoaders.from_dsets(train_ds, train_ds, bs=bs).cuda()
+    return poi_data_loader
