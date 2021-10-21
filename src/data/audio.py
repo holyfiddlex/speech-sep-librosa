@@ -1,16 +1,17 @@
 """Audio and Spectrogram definitions"""
 
 import math
-import librosa
-import matplotlib.pyplot as plt
 from pathlib import Path
 
+import librosa
 import numpy as np
-from fastai.data.transforms import ToTensor
-from fastai.torch_basics import Tensor, torch
+import matplotlib.pyplot as plt
 
 from scipy.signal import resample_poly
 from IPython.display import Audio, display
+
+from fastai.data.transforms import ToTensor
+from fastai.torch_basics import Tensor, torch
 
 from src.utils.errors import SpecShapeTooBigError
 
@@ -193,7 +194,12 @@ class SpecTensor(SpecObject):
         """Returns SpecTensor data as SpecArray"""
         return SpecArray(self.data, self.sr, self.fn)
 
+# pylint: disable=missing-function-docstring
+# pylint: disable=unused-argument
+# pylint: disable=function-redefined
 @ToTensor
-def encodes(self, o:AudioTensor): return o.data
+def encodes(self, o:AudioTensor):
+    return o.data
 @ToTensor
-def encodes(self, o:SpecTensor): return o.data
+def encodes(self, o:SpecTensor):
+    return o.data

@@ -85,7 +85,9 @@ class SpecTimmer(Transform):
         return spec
 
 class DebugPrinter(Transform):
+    """Simple transform used to debug pipeline"""
     def encodes(self, o):
+        """Prints returns object"""
         print(o)
         return o
 
