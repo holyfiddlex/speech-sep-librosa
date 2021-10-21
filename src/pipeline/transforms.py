@@ -4,7 +4,7 @@ from fastai.data.transforms import (
     ItemTransform,
     Transform,
     Pipeline,
-    # ToTensor,
+    ToTensor,
 )
 
 from src.data.audio import (
@@ -15,7 +15,7 @@ from src.data.audio import (
     SpecObject,
 )
 
-from src.data.mask import MaskTensor
+from src.data.mask import MaskArray, MaskTensor
 
 from src.utils.errors import (
     AudioDurationMismatchError,
@@ -31,6 +31,10 @@ class Tensorify(Transform):
     def encodes(self, spec: SpecArray):
         """Encodes spectrogram to tensor"""
         return spec.to_tensor()
+    
+    def encodes(self, mask: MaskArray):
+        """Encodes mask to tensor"""
+        return mask.to_tensor()
 
     def decodes(self, spec: SpecTensor):
         """Decodes spectrogram to array"""
@@ -56,7 +60,6 @@ class MaskifyIBM(ItemTransform):
 
     def encodes(self, specs):
         """Creates mask from spectrograms"""
-        print(type(specs[0]))
         mask = MaskTensor((specs[0].data > self.umbral)*1)
         return tuple([specs[-1], mask])
 
@@ -120,4 +123,5 @@ PoiPipeline = Pipeline([
     SpecTimmer((1024, 176)),
     MaskifyIBM(0.1),
     Tensorify(),
+    ToTensor(),
 ])
