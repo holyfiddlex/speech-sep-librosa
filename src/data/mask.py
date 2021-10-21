@@ -1,7 +1,10 @@
 """Mask object definitions"""
 
 import numpy as np
+
 from fastai.torch_basics import Tensor
+from fastai.data.transforms import ToTensor
+
 from src.data.audio import SpecArray, SpecTensor
 
 class MaskObject():
@@ -43,3 +46,10 @@ class MaskTensor(MaskObject):
 
     data_type: callable = Tensor
     spec_type: type = SpecTensor
+
+# pylint: disable=missing-function-docstring
+# pylint: disable=unused-argument
+# pylint: disable=function-redefined
+@ToTensor
+def encodes(self, o:MaskTensor):
+    return o.data

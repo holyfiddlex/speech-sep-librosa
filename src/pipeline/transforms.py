@@ -4,7 +4,7 @@ from fastai.data.transforms import (
     ItemTransform,
     Transform,
     Pipeline,
-    ToTensor,
+    # ToTensor,
 )
 
 from src.data.audio import (
@@ -14,6 +14,9 @@ from src.data.audio import (
     SpecTensor,
     SpecObject,
 )
+
+from src.data.mask import MaskTensor
+
 from src.utils.errors import (
     AudioDurationMismatchError,
     AudioTypeMismatchError,
@@ -46,6 +49,19 @@ class Spectify(Transform):
 
 
 # pylint: disable=super-init-not-called
+class MaskifyIBM(ItemTransform):
+    """Turn two spectrograms to mask object"""
+    def __init__(self, umbral: float):
+        self.umbral = umbral
+
+    def encodes(self, specs):
+        """Creates mask from spectrograms"""
+        print(type(specs[0]))
+        mask = MaskTensor((specs[0].data > self.umbral)*1)
+        return tuple([specs[-1], mask])
+
+
+# pylint: disable=super-init-not-called
 class AudioProcessor(Transform):
     """Turn spectrogram to tensor object"""
     def __init__(self, sr=22050, duration=5):
@@ -57,6 +73,7 @@ class AudioProcessor(Transform):
         audio.sr = self.sr
         audio.clip(self.duration)
         return audio
+
 
 class AudioMixer(ItemTransform):
     """Turn spectrogram to tensor object"""
@@ -72,7 +89,9 @@ class AudioMixer(ItemTransform):
 
         mixed_signal = sum([audio.sig for audio in audios])
         mixed_name = " with ".join([str(audio.fn) for audio in audios])
-        return type(audios[0])(mixed_signal, audios[0].sr, "mixed audios: "+mixed_name)
+        mixed_audio = type(audios[0])(mixed_signal, audios[0].sr, "mixed audios: "+mixed_name)
+        return tuple([*audios, mixed_audio])
+
 
 class SpecTimmer(Transform):
     """Trim spectrogram to fit into model"""
@@ -84,6 +103,7 @@ class SpecTimmer(Transform):
         spec.trim(self.shape)
         return spec
 
+
 class DebugPrinter(Transform):
     """Simple transform used to debug pipeline"""
     def encodes(self, o):
@@ -91,12 +111,13 @@ class DebugPrinter(Transform):
         print(o)
         return o
 
+
 PoiPipeline = Pipeline([
     AudioArray.from_file,
     AudioProcessor(),
     AudioMixer(),
     Spectify(),
     SpecTimmer((1024, 176)),
+    MaskifyIBM(0.1),
     Tensorify(),
-    ToTensor(),
 ])
