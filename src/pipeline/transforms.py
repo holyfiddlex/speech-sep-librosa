@@ -115,6 +115,18 @@ class DebugPrinter(Transform):
         return o
 
 
+class Permute(Transform):
+    """Permutes data into correct order"""
+    order=5
+    def encodes(self, o):
+        """Reverses order of object dimensions"""
+        return o.permute(2,1,0)
+    
+    def decodes(self, o):
+        """Reverses order of object dimensions"""
+        return o.permute(2,1,0)
+
+
 PoiPipeline = Pipeline([
     AudioArray.from_file,
     AudioProcessor(),
@@ -124,4 +136,5 @@ PoiPipeline = Pipeline([
     MaskifyIBM(0.1),
     Tensorify(),
     ToTensor(),
+    Permute(),
 ])
